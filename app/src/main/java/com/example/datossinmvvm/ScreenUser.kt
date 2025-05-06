@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -21,9 +20,18 @@ import androidx.compose.ui.unit.sp
 import androidx.room.Room
 import kotlinx.coroutines.launch
 import android.util.Log
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.getValue
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScreenUser() {
     val context = LocalContext.current
@@ -39,69 +47,66 @@ fun ScreenUser() {
 
     val coroutineScope = rememberCoroutineScope()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ){
-        Spacer(Modifier.height(50.dp))
-        TextField(
-            value = id,
-            onValueChange = { id = it },
-            label = { Text("ID (solo lectura)") },
-            readOnly = true,
-            singleLine = true
-        )
-        TextField(
-            value = firstName,
-            onValueChange = { firstName = it },
-            label = { Text("First Name: ") },
-            singleLine = true
-        )
-        TextField(
-            value = lastName,
-            onValueChange = { lastName = it },
-            label = { Text("Last Name:") },
-            singleLine = true
-        )
-        Button(
-            onClick = {
-                val user = User(0,firstName, lastName)
-                coroutineScope.launch {
-                    AgregarUsuario(user = user, dao = dao)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Datos sin MVVM") },
+                actions = {
+                    IconButton(onClick = {
+                        val user = User(0, firstName, lastName)
+                        coroutineScope.launch {
+                            AgregarUsuario(user = user, dao = dao)
+                        }
+                        firstName = ""
+                        lastName = ""
+                    }) {
+                        Icon(Icons.Default.Add, contentDescription = "Agregar Usuario")
+                    }
+                    IconButton(onClick = {
+                        coroutineScope.launch {
+                            val data = getUsers(dao = dao)
+                            dataUser.value = data
+                        }
+                    }) {
+                        Icon(Icons.Default.Info, contentDescription = "Listar Usuarios")
+                    }
                 }
-                firstName = ""
-                lastName = ""
+            )
+        },
+        content = { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp)
+            ){
+                Spacer(Modifier.height(50.dp))
+                TextField(
+                    value = id,
+                    onValueChange = { id = it },
+                    label = { Text("ID (solo lectura)") },
+                    readOnly = true,
+                    singleLine = true
+                )
+                TextField(
+                    value = firstName,
+                    onValueChange = { firstName = it },
+                    label = { Text("First Name: ") },
+                    singleLine = true
+                )
+                TextField(
+                    value = lastName,
+                    onValueChange = { lastName = it },
+                    label = { Text("Last Name:") },
+                    singleLine = true
+                )
+                Text(
+                    text = dataUser.value, fontSize = 20.sp
+                )
+
             }
-        ) {
-            Text("Agregar Usuario", fontSize=16.sp)
         }
-        Button(
-            onClick = {
-                val user = User(0,firstName, lastName)
-                coroutineScope.launch {
-                    val data = getUsers( dao = dao)
-                    dataUser.value = data
-                }
-            }
-        ) {
-            Text("Listar Usuarios", fontSize=16.sp)
-        }
-        Button(
-            onClick = {
-                coroutineScope.launch {
-                    dao.deleteLastUser()
-                    val data = getUsers( dao = dao)
-                    dataUser.value = data
-                }
-            }
-        ) {
-            Text("Eliminar Usuario", fontSize=16.sp)
-        }
-        Text(
-            text = dataUser.value, fontSize = 20.sp
-        )
-    }
+    )
 }
 
 @Composable
